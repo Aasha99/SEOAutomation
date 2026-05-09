@@ -54,3 +54,20 @@ jobs:
           python3 -m py_compile scripts/sync_flow.py
           python3 -m py_compile scripts/release_report.py
           echo "All 30 scripts passed syntax check"
+
+  test:
+    name: Test suite (manifests + sync_flow)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.10"
+
+      - name: Install pytest
+        run: pip install pytest
+
+      - name: Run pytest
+        run: pytest tests/ -v
