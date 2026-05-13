@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   lint:
     name: Python Syntax Check
@@ -51,3 +54,27 @@ jobs:
           python3 -m py_compile scripts/sync_flow.py
           python3 -m py_compile scripts/release_report.py
           echo "All 30 scripts passed syntax check"
+
+  test:
+    name: Test suite (manifests + sync_flow)
+    runs-on: ubuntu-latest
+    env:
+      # gh CLI honors GH_TOKEN automatically; sync_flow.py uses gh for auth.
+      # Without this, anonymous API requests hit GitHub's 60/hr per-IP rate
+      # limit and the sync_flow dry-run test fails on shared-runner IPs.
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.10"
+
+      - name: Install pytest + test deps
+        # beautifulsoup4 is required by tests/test_lazy_detection.py which
+        # exercises parse_html.py via real BeautifulSoup parsing.
+        run: pip install pytest beautifulsoup4
+
+      - name: Run pytest
+        run: pytest tests/ -v
