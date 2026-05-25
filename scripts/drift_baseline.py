@@ -149,54 +149,83 @@ def fetch_page_data(url: str) -> dict:
     """
     result = {"status_code": None, "html": None, "parsed": None, "error": None}
 
-    # Step 1: Fetch the page via fetch_page.py
+    # Fetch -> parse handoff via a tempfile.
+    #
+    # The previous pipeline (--output /dev/stdout, then piping HTML through
+    # stdin to parse_html) is Unix-biased and fails on Windows in three places:
+    #   1. /dev/stdout is not a valid path on Windows (FileNotFoundError).
+    #   2. subprocess.run(..., text=True) defaults to the system codec
+    #      (cp1252 on Windows), which UnicodeEncodeErrors on any non-Latin-1
+    #      character flowing through stdin.
+    #   3. Pipe-via-stdin can carry surrogate codepoints back into parse_html;
+    #      lxml strictly rejects surrogates.
+    #
+    # Writing fetch_page output to a tempfile and passing that path to
+    # parse_html (which already accepts a positional `file` argument) sidesteps
+    # all three. encoding="utf-8", errors="replace" on subprocess.run is
+    # defensive — on macOS / Linux it's a no-op, on Windows it forces the right
+    # codec.
+    import tempfile
     fetch_script = os.path.join(SCRIPTS_DIR, "fetch_page.py")
-    try:
-        proc = subprocess.run(
-            [sys.executable, fetch_script, url, "--output", "/dev/stdout"],
-            capture_output=True,
-            text=True,
-            timeout=60,
-        )
-    except subprocess.TimeoutExpired:
-        result["error"] = "Page fetch timed out after 60 seconds"
-        return result
-
-    if proc.returncode != 0:
-        error_msg = proc.stderr.strip() if proc.stderr else "Unknown fetch error"
-        result["error"] = f"Fetch failed: {error_msg}"
-        return result
-
-    html_content = proc.stdout
-
-    # Extract status code from stderr output (fetch_page.py prints "Status: NNN")
-    status_match = re.search(r"Status:\s*(\d+)", proc.stderr or "")
-    result["status_code"] = int(status_match.group(1)) if status_match else 200
-    result["html"] = html_content
-
-    # Step 2: Parse the HTML via parse_html.py
     parse_script = os.path.join(SCRIPTS_DIR, "parse_html.py")
+    tmp_fd, tmp_path = tempfile.mkstemp(suffix=".html")
+    os.close(tmp_fd)
     try:
-        proc = subprocess.run(
-            [sys.executable, parse_script, "--url", url, "--json"],
-            input=html_content,
-            capture_output=True,
-            text=True,
-            timeout=30,
-        )
-    except subprocess.TimeoutExpired:
-        result["error"] = "HTML parsing timed out after 30 seconds"
-        return result
+        try:
+            proc = subprocess.run(
+                [sys.executable, fetch_script, url, "--output", tmp_path],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=60,
+            )
+        except subprocess.TimeoutExpired:
+            result["error"] = "Page fetch timed out after 60 seconds"
+            return result
 
-    if proc.returncode != 0:
-        error_msg = proc.stderr.strip() if proc.stderr else "Unknown parse error"
-        result["error"] = f"Parse failed: {error_msg}"
-        return result
+        if proc.returncode != 0:
+            error_msg = proc.stderr.strip() if proc.stderr else "Unknown fetch error"
+            result["error"] = f"Fetch failed: {error_msg}"
+            return result
 
-    try:
-        result["parsed"] = json.loads(proc.stdout)
-    except json.JSONDecodeError as e:
-        result["error"] = f"Failed to parse JSON output: {e}"
+        # Extract status code from stderr output (fetch_page.py prints "Status: NNN")
+        status_match = re.search(r"Status:\s*(\d+)", proc.stderr or "")
+        result["status_code"] = int(status_match.group(1)) if status_match else 200
+
+        # Read the HTML once for hashing (errors="replace" scrubs invalid bytes).
+        with open(tmp_path, "r", encoding="utf-8", errors="replace") as f:
+            result["html"] = f.read()
+
+        # Parse the HTML via parse_html.py — pass the tempfile as a positional
+        # arg so we don't go through stdin (avoids the cp1252 + surrogate chain).
+        try:
+            proc = subprocess.run(
+                [sys.executable, parse_script, tmp_path, "--url", url, "--json"],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=30,
+            )
+        except subprocess.TimeoutExpired:
+            result["error"] = "HTML parsing timed out after 30 seconds"
+            return result
+
+        if proc.returncode != 0:
+            error_msg = proc.stderr.strip() if proc.stderr else "Unknown parse error"
+            result["error"] = f"Parse failed: {error_msg}"
+            return result
+
+        try:
+            result["parsed"] = json.loads(proc.stdout)
+        except json.JSONDecodeError as e:
+            result["error"] = f"Failed to parse JSON output: {e}"
+    finally:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
 
     return result
 
