@@ -11,6 +11,8 @@
 [![Tests](https://img.shields.io/badge/tests-271%20passing-brightgreen)](tests/)
 [![Community](https://img.shields.io/badge/AI%20Marketing%20Hub-Pro%20community-purple)](https://www.skool.com/ai-marketing-hub-pro)
 
+> **Why this fork.** Personal fork of [`AgriciDaniel/claude-seo`](https://github.com/AgriciDaniel/claude-seo) that adds support for [Umami](https://umami.is/) (self-hosted, cookieless web analytics) as a privacy-friendly alternative to GA4, so the SEO skills can read on-site engagement data without a cookie-consent banner. Everything else tracks upstream. For general `claude-seo` work, please use upstream. This fork only holds the Umami changes.
+
 > **Two versions of this skill.**
 > - 🌐 **Public open-source** → [`AgriciDaniel/claude-seo`](https://github.com/AgriciDaniel/claude-seo): MIT, public releases, no membership. Use this if you want stable + downloadable.
 > - 🔒 **Community private mirror** → [`AI-Marketing-Hub/claude-seo`](https://github.com/AI-Marketing-Hub/claude-seo): early access to upcoming features and direct collaboration with the [AI Marketing Hub Pro](https://www.skool.com/ai-marketing-hub-pro) community. Requires membership.
