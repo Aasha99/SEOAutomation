@@ -29,6 +29,11 @@ from urllib.parse import parse_qs, urlparse, urlunparse, urlencode
 SCRIPTS_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, SCRIPTS_DIR)
 
+# Run child scripts (fetch/parse/pagespeed) in UTF-8 mode so page content with
+# non-ASCII or invalid bytes does not crash on Windows consoles defaulting to
+# cp1252. Without this, lone surrogates / undecodable bytes break the pipeline.
+_UTF8_ENV = {**os.environ, "PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8"}
+
 from google_auth import validate_url  # noqa: E402
 
 DB_DIR = os.path.expanduser("~/.cache/claude-seo/drift")
@@ -153,9 +158,12 @@ def fetch_page_data(url: str) -> dict:
     fetch_script = os.path.join(SCRIPTS_DIR, "fetch_page.py")
     try:
         proc = subprocess.run(
-            [sys.executable, fetch_script, url, "--output", "/dev/stdout"],
+            [sys.executable, fetch_script, url],
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
+            env=_UTF8_ENV,
             timeout=60,
         )
     except subprocess.TimeoutExpired:
@@ -182,6 +190,9 @@ def fetch_page_data(url: str) -> dict:
             input=html_content,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
+            env=_UTF8_ENV,
             timeout=30,
         )
     except subprocess.TimeoutExpired:
@@ -213,6 +224,9 @@ def fetch_cwv_data(url: str) -> dict | None:
             [sys.executable, psi_script, url, "--psi-only", "--strategy", "mobile", "--json"],
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
+            env=_UTF8_ENV,
             timeout=180,
         )
     except subprocess.TimeoutExpired:

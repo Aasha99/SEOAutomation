@@ -148,6 +148,14 @@ def fetch_page(
 
 
 def main():
+    # Force UTF-8 stdout/stderr so page content with non-ASCII characters
+    # (e.g. U+25BC) doesn't crash on Windows consoles defaulting to cp1252.
+    for _stream in (sys.stdout, sys.stderr):
+        try:
+            _stream.reconfigure(encoding="utf-8")
+        except (AttributeError, ValueError):
+            pass
+
     parser = argparse.ArgumentParser(description="Fetch a web page for SEO analysis")
     parser.add_argument("url", help="URL to fetch")
     parser.add_argument("--output", "-o", help="Output file path")
