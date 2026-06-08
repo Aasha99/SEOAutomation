@@ -15,8 +15,11 @@ Canonical plugin hook configuration (hooks/hooks.json):
         "hooks": [
           {
             "type": "command",
-            "command": "python3",
+            "command": "sh",
             "args": [
+              "-c",
+              "PY=\"${CLAUDE_SEO_PYTHON:-}\"; if [ -z \"$PY\" ]; then if command -v python3 >/dev/null 2>&1; then PY=python3; else PY=python; fi; fi; exec \"$PY\" \"$1\" \"$2\"",
+              "_",
               "${CLAUDE_PLUGIN_ROOT}/hooks/validate-schema.py",
               "${tool_input.file_path}"
             ],
@@ -27,6 +30,17 @@ Canonical plugin hook configuration (hooks/hooks.json):
     ]
   }
 }
+
+The `sh -c` launcher resolves the Python interpreter at runtime to stay
+portable across platforms:
+
+- Honors `$CLAUDE_SEO_PYTHON` first, so pyenv/conda users (and Windows users
+  who hit the Microsoft Store `python3` stub) can pin a working interpreter
+  without patching the plugin.
+- Otherwise prefers `python3` (correct on macOS/Linux, where bare `python`
+  is often absent on Ubuntu 24.04+, recent Debian, Fedora).
+- Falls back to `python` (correct on stock Windows, where `python3` is
+  frequently the no-op Microsoft Store launcher).
 
 Note: matcher filters by tool name (Edit, Write). The script itself checks
 if the file contains schema markup before validating, and exits 0 silently

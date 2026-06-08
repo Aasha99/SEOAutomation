@@ -7,8 +7,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3",
+            "command": "sh",
             "args": [
+              "-c",
+              "PY=\"${CLAUDE_SEO_PYTHON:-}\"; if [ -z \"$PY\" ]; then if command -v python3 >/dev/null 2>&1; then PY=python3; else PY=python; fi; fi; exec \"$PY\" \"$1\" \"$2\"",
+              "_",
               "${CLAUDE_PLUGIN_ROOT}/hooks/validate-schema.py",
               "${tool_input.file_path}"
             ],
