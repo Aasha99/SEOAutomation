@@ -67,6 +67,8 @@ The installer creates a venv at `~/.claude/skills/seo/.venv/`. If that fails, in
 ```bash
 # Option A: Use the venv
 ~/.claude/skills/seo/.venv/bin/pip install -r ~/.claude/skills/seo/requirements.txt
+# On Windows the venv layout differs — use Scripts/ instead of bin/:
+#   ~/.claude/skills/seo/.venv/Scripts/pip install -r ~/.claude/skills/seo/requirements.txt
 
 # Option B: User-level install
 pip install --user -r ~/.claude/skills/seo/requirements.txt

@@ -42,6 +42,8 @@ As of v1.2.0, dependencies are installed in a venv. Try:
 ```bash
 # Use the venv pip
 ~/.claude/skills/seo/.venv/bin/pip install -r ~/.claude/skills/seo/requirements.txt
+# On Windows the venv layout differs — use Scripts/ instead of bin/:
+~/.claude/skills/seo/.venv/Scripts/pip install -r ~/.claude/skills/seo/requirements.txt
 ```
 
 If the venv doesn't exist, install with `--user`:
