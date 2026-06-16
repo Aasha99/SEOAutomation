@@ -4,9 +4,9 @@
 
 This repository contains **Claude SEO**, a Tier 4 Claude Code skill for comprehensive
 SEO analysis across all industries. It follows the Agent Skills open standard and the
-3-layer architecture (directive, orchestration, execution). 25 sub-skills (21 core +
-1 orchestrator + 1 framework integration + 2 extension mirrors), 18 sub-agents (15 core +
-1 framework integration + 2 extension mirrors), and an extensible reference
+3-layer architecture (directive, orchestration, execution). 26 sub-skills (21 core +
+1 orchestrator + 1 framework integration + 3 extension mirrors), 19 sub-agents (15 core +
+1 framework integration + 3 extension mirrors), and an extensible reference
 system cover technical SEO, content quality,
 schema markup, image optimization, sitemap architecture, AI search optimization,
 local SEO (GBP, citations, reviews, map pack), maps intelligence, semantic topic
@@ -59,6 +59,7 @@ claude-seo/
       SKILL.md
       references/                # Marketplace API endpoints
     seo-dataforseo/SKILL.md     # Live SEO data via DataForSEO MCP (extension mirror)
+    seo-brightdata/SKILL.md     # Web scraping, SERP, AI visibility, e-commerce via Bright Data MCP (extension mirror)
     seo-image-gen/              # AI image generation for SEO assets (extension mirror)
       SKILL.md
       references/                # Image gen reference files (7 files)
@@ -75,6 +76,7 @@ claude-seo/
     seo-google.md                # Google API analyst (CrUX, GSC, GA4)
     seo-backlinks.md             # Backlink profile analyst (Moz, Bing, CC, verify)
     seo-dataforseo.md            # DataForSEO data analyst
+    seo-brightdata.md            # Bright Data web scraping & intelligence analyst
     seo-image-gen.md             # SEO image audit analyst
     seo-cluster.md               # Semantic clustering analysis
     seo-sxo.md                   # Search experience optimization
@@ -138,6 +140,7 @@ claude-seo/
   extensions/                      # Optional add-on install helpers
     dataforseo/                  # DataForSEO MCP install scripts
     firecrawl/                   # Firecrawl MCP install scripts
+    brightdata/                  # Bright Data MCP install scripts
     banana/                      # Banana MCP install scripts
   docs/                            # Extended documentation
 ```
@@ -174,6 +177,7 @@ claude-seo/
 | `/seo flow <url>` | Apply the FLOW framework: stage prompts and structured search-and-conversion output |
 | `/seo firecrawl [command] <url>` | Full-site crawling and site mapping (extension) |
 | `/seo dataforseo [command]` | Live SEO data via DataForSEO MCP (extension) |
+| `/seo brightdata [command] <url\|query>` | Web scraping, SERP, AI visibility, e-commerce intel via Bright Data MCP (extension) |
 | `/seo image-gen [use-case] <desc>` | AI image generation for SEO assets (extension) |
 
 ## Development Rules
@@ -221,7 +225,7 @@ Part of the Claude Code skill family:
 1. **Progressive Disclosure**: Metadata always loaded, instructions on activation, resources on demand
 2. **Industry Detection**: Auto-detect SaaS, e-commerce, local, publisher, agency
 3. **Parallel Execution**: Full audits spawn up to 15 subagents simultaneously
-4. **Extension System**: DataForSEO MCP for live data, Firecrawl MCP for site crawling, Banana MCP for AI image generation
+4. **Extension System**: DataForSEO MCP for live data, Firecrawl MCP for site crawling, Bright Data MCP for web scraping & AI visibility, Banana MCP for AI image generation
 
 ## Repository Topology (public + private)
 

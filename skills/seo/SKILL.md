@@ -17,8 +17,8 @@ metadata:
 **Scripts:** Located at the plugin root `scripts/` directory.
 
 Comprehensive SEO analysis across all industries (SaaS, local services,
-e-commerce, publishers, agencies). Orchestrates 24 sub-skills (21 core + 1 framework
-integration + 2 extension mirrors) and 18 sub-agents. A separate optional Firecrawl
+e-commerce, publishers, agencies). Orchestrates 25 sub-skills (21 core + 1 framework
+integration + 3 extension mirrors) and 19 sub-agents. A separate optional Firecrawl
 extension is also installable (see "Optional Extensions" below).
 
 ## Quick Reference
@@ -50,6 +50,7 @@ extension is also installable (see "Optional Extensions" below).
 | `/seo ecommerce <url>` | E-commerce SEO: product schema, marketplace intelligence |
 | `/seo firecrawl [command] <url>` | Full-site crawling and site mapping (extension) |
 | `/seo dataforseo [command]` | Live SEO data via DataForSEO (extension) |
+| `/seo brightdata [command] <url\|query>` | Web scraping, SERP, AI visibility, e-commerce intel (extension) |
 | `/seo image-gen [use-case] <description>` | AI image generation for SEO assets (extension) |
 | `/seo flow [stage] [url\|topic]` | FLOW framework: evidence-led prompts for Find, Leverage, Optimize, Win, or Local stages |
 
@@ -63,6 +64,7 @@ When the user invokes `/seo audit`, delegate to subagents in parallel:
 5. If local business detected AND DataForSEO MCP available, also spawn seo-maps agent
 6. If backlink APIs detected (`python3 scripts/backlinks_auth.py --check`), also spawn seo-backlinks agent
 7. If Firecrawl MCP available, use `firecrawl_map` to discover all site URLs before analysis
+7b. If Bright Data MCP available, use `search_engine` for real SERP data and `scrape_as_markdown` for anti-bot competitor scraping; if Pro mode enabled, also use AI insights (ChatGPT, Grok, Perplexity) for GEO analysis
 8. If content strategy signals detected (blog, pillar pages, topic clusters), also spawn seo-cluster agent
 9. If e-commerce detected, also spawn seo-ecommerce agent
 10. If drift baseline exists for this URL (`python3 scripts/drift_history.py <url>`), also spawn seo-drift agent
@@ -196,7 +198,7 @@ Weighted aggregate of all categories:
 
 ## Sub-Skills
 
-This skill orchestrates 24 sub-skills (21 core + 1 framework integration + 2 extension
+This skill orchestrates 25 sub-skills (21 core + 1 framework integration + 2 extension
 mirrors). The orchestrator itself (`seo`) is the 25th in `skills/`, but does not
 orchestrate itself, so it is not enumerated below.
 
