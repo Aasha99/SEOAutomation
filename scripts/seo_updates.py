@@ -6,10 +6,9 @@ Reads ``data/google-updates.json`` and surfaces filtered views of the
 confirmed Google ranking / spam / QRG / product / schema updates
 since March 2024. Every entry cites a Google-owned URL.
 
-The companion file lists *unverified* third-party claims separately
-(e.g. the gap-analysis-flagged "March 2026 core update"). Those entries
-are explicitly NOT used to drive recommendations until they are
-confirmed against ``status.search.google.com``.
+The companion file can list *unverified* third-party claims separately.
+Those entries are explicitly NOT used to drive recommendations until they
+are confirmed against ``status.search.google.com``.
 
 Usage::
 

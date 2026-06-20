@@ -28,15 +28,20 @@ try:
     import matplotlib.pyplot as plt
     import matplotlib.patches as mpatches
     import numpy as np
-except ImportError:
-    print("Error: matplotlib required. Install with: pip install matplotlib", file=sys.stderr)
-    sys.exit(1)
+    _MISSING_DEP = None
+except Exception:
+    # Broad except: a broken numpy ABI surfaces as ImportError, missing native
+    # libs as OSError — any failure means charts are unavailable, not a crash.
+    matplotlib = plt = mpatches = np = None
+    _MISSING_DEP = "matplotlib required. Install with: pip install matplotlib"
 
 try:
     from weasyprint import HTML
-except ImportError:
-    print("Error: weasyprint required. Install with: pip install weasyprint", file=sys.stderr)
-    sys.exit(1)
+except Exception:
+    # WeasyPrint raises OSError (not ImportError) when its native libs are absent.
+    HTML = None
+    if _MISSING_DEP is None:
+        _MISSING_DEP = "weasyprint required. Install with: pip install weasyprint"
 
 
 # ─── Brand Colors ────────────────────────────────────────────────────────────
@@ -112,7 +117,8 @@ def _setup_matplotlib():
     })
 
 
-_setup_matplotlib()
+if plt is not None:
+    _setup_matplotlib()
 
 
 # ─── Chart Functions ─────────────────────────────────────────────────────────
@@ -2600,6 +2606,12 @@ def main():
     parser.add_argument("--json", "-j", action="store_true", help="Output metadata as JSON")
 
     args = parser.parse_args()
+
+    # Hard-fail at run time (not import time) when the report toolchain is absent,
+    # so importing this module for tests/inspection never aborts collection.
+    if _MISSING_DEP is not None:
+        print(f"Error: {_MISSING_DEP}", file=sys.stderr)
+        sys.exit(1)
 
     # Load data
     if args.data:

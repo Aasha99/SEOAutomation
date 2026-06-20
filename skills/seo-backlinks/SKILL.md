@@ -118,7 +118,7 @@ Analyze:
 - Links from thin content pages (<100 words)
 - Excessive links from a single domain (>50 backlinks from 1 domain)
 
-Load `references/backlink-quality.md` for the full 30 toxic patterns and disavow criteria.
+Load `skills/seo/references/backlink-quality.md` for the full 30 toxic patterns and disavow criteria.
 
 ### 5. Top Pages by Backlinks
 
