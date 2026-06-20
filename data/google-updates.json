@@ -33,7 +33,7 @@
       "notes": "Helpful Content System merged into core ranking; new spam policies for scaled content, site reputation, and expired domain abuse."
     },
     {
-      "date": "2024-03-05",
+      "date": "2024-03-12",
       "name": "INP replaces FID",
       "kind": "cwv",
       "source": "https://web.dev/articles/inp",
