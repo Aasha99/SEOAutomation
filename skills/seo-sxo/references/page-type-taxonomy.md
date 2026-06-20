@@ -80,8 +80,7 @@ moderate ad density.
 
 **Content structure:** Problem statement > Solution overview > How it works > Feature deep-dives > Social proof > CTA > FAQ.
 
-**Required elements:** FAQPage or HowTo schema combined with product schema,
-both educational and commercial CTAs, clear value proposition.
+**Required elements:** Product/Service schema combined with educational and commercial CTAs and a clear value proposition. A FAQ section still aids AI/entity signals, but FAQPage no longer yields a rich result (retired May 7 2026) and HowTo rich results were removed (Sept 2023) — don't treat either as a SERP-feature lever.
 
 **Common mismatches:**
 - Pure Blog Post missing product integration (severity: HIGH)

@@ -475,7 +475,7 @@ MIT License. See [LICENSE](LICENSE) for details.
 
 ## Contributing
 
-Contributions welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting PRs. The project enforces a per-PR audit gate covering manifest consistency (14 assertions), the test suite (326 passing), and an 8-dimension security review before any merge to `main`.
+Contributions welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting PRs. The project enforces a per-PR audit gate covering manifest consistency (15 assertions), the test suite (326 passing), and an 8-dimension security review before any merge to `main`.
 
 ---
 
