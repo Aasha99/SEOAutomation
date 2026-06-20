@@ -6,6 +6,13 @@ import os
 import sys
 from pathlib import Path
 
+import pytest
+
+# Report generation needs the chart/PDF toolchain; skip cleanly where it is
+# unavailable (e.g. a Windows env with a NumPy-incompatible matplotlib) rather
+# than aborting collection for the whole suite.
+pytest.importorskip("matplotlib")
+pytest.importorskip("weasyprint")
 
 _SCRIPTS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "scripts")
 if _SCRIPTS not in sys.path:
