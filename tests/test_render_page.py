@@ -85,6 +85,44 @@ def test_is_spa_negative(html: str) -> None:
     assert render_page._is_spa(html) is False
 
 
+# Site-builders (Wix/Squarespace/Webflow) ship a non-empty SSR shell whose
+# body text is >100 chars, so the framework-shell and thin-body checks miss
+# them. They must still be rendered or head-level schema/meta + JS-mounted
+# content are invisible. Each HTML below has ample body text and only trips
+# _is_spa via a builder fingerprint.
+_BUILDER_BODY = "<h1>Mobile Car Detailing in Edmond</h1>" + ("Real visible copy here. " * 10)
+
+
+@pytest.mark.parametrize(
+    "html",
+    [
+        # Wix — generator meta
+        '<html><head><meta name="generator" content="Wix.com Website Builder"/></head>'
+        f"<body>{_BUILDER_BODY}</body></html>",
+        # Wix — Thunderbolt asset host
+        f'<html><body>{_BUILDER_BODY}<script src="https://static.parastorage.com/x.js"></script></body></html>',
+        # Wix — DOM root container
+        f'<html><body><div id="SITE_CONTAINER">{_BUILDER_BODY}</div></body></html>',
+        # Squarespace
+        '<html><head><meta name="generator" content="Squarespace"/></head>'
+        f"<body>{_BUILDER_BODY}</body></html>",
+        # Webflow
+        f'<html><body data-wf-page="abc" data-wf-site="def">{_BUILDER_BODY}</body></html>',
+    ],
+)
+def test_is_spa_detects_site_builders(html: str) -> None:
+    assert render_page._is_spa(html) is True
+
+
+def test_is_spa_low_text_to_markup_ratio() -> None:
+    # Large document dominated by inline scripts/markup with <5% visible text
+    # is component-rendered even though the body isn't literally empty.
+    big_script = "<script>" + ("var x=1;" * 12000) + "</script>"  # ~96 KB, no text
+    html = f"<html><body><h1>Hi</h1>{big_script}<p>tiny</p></body></html>"
+    assert len(html) > render_page._RATIO_BODY_MIN
+    assert render_page._is_spa(html) is True
+
+
 # ---------------------------------------------------------------------------
 # render_page — argument validation
 # ---------------------------------------------------------------------------

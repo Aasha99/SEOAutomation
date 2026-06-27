@@ -129,8 +129,33 @@ _SPA_SHELL_PATTERNS = (
     'please enable javascript',
 )
 
+# Component/SSR site-builders that ship a *non-empty* shell but render the real
+# content (and inject head-level schema/meta) via JS. Their shells have >100
+# chars of body text (inline scripts/boilerplate) so the absolute thin-body
+# check below misses them, and they don't match the framework shells above.
+# Any single match forces a render in auto mode.
+_RENDER_REQUIRED_FINGERPRINTS = (
+    'content="wix.com',          # <meta name="generator" content="Wix.com Website Builder">
+    'static.parastorage.com',    # Wix Thunderbolt asset host
+    'id="site_container"',       # Wix DOM root
+    'wix-warmup-data',           # Wix hydration payload
+    'squarespace.com',           # Squarespace
+    'content="squarespace',
+    'data-wf-page',              # Webflow
+    'data-wf-site',
+)
+
 _TAG_STRIP = re.compile(r"<[^>]+>")
 _WHITESPACE = re.compile(r"\s+")
+# Strip <script>/<style> *content* (not just the tags). Site-builders inline
+# large JS/JSON payloads; without this they survive tag-stripping and count as
+# "visible text", defeating the thin-body and ratio checks below.
+_SCRIPT_STYLE_STRIP = re.compile(r"<(script|style)\b[^>]*>.*?</\1>", re.IGNORECASE | re.DOTALL)
+
+# Large pages dominated by markup/scripts (low real-text fraction) are
+# component-rendered even when the body isn't literally empty.
+_RATIO_BODY_MIN = 50000   # only apply the ratio test to large documents
+_RATIO_TEXT_MAX = 0.05    # <5% visible text => treat as needs-render
 
 
 def _is_spa(raw_html: Optional[str]) -> bool:
@@ -139,6 +164,10 @@ def _is_spa(raw_html: Optional[str]) -> bool:
         return True
     lc = raw_html.lower()
     if any(pattern in lc for pattern in _SPA_SHELL_PATTERNS):
+        return True
+    # Site-builder fingerprints (Wix/Squarespace/Webflow) that need rendering
+    # despite shipping a non-empty SSR shell.
+    if any(pattern in lc for pattern in _RENDER_REQUIRED_FINGERPRINTS):
         return True
     # Very thin <body> suggests JS-rendered content even without a shell.
     # Threshold (100 chars) sits between typical SPA shells (0-50 chars of
@@ -149,8 +178,12 @@ def _is_spa(raw_html: Optional[str]) -> bool:
     body_end = lc.rfind("</body>")
     if body_start != -1 and body_end > body_start:
         body = lc[body_start:body_end]
-        text = _WHITESPACE.sub(" ", _TAG_STRIP.sub("", body)).strip()
+        body_text_only = _SCRIPT_STYLE_STRIP.sub(" ", body)
+        text = _WHITESPACE.sub(" ", _TAG_STRIP.sub("", body_text_only)).strip()
         if len(text) < 100:
+            return True
+        # Text-to-markup ratio guard for large, script-heavy documents.
+        if len(body) > _RATIO_BODY_MIN and (len(text) / len(body)) < _RATIO_TEXT_MAX:
             return True
     return False
 
@@ -263,11 +296,22 @@ def render_page(
                 page.on("console", _on_console)
                 page.route("**/*", route_handler)
 
-                response = page.goto(
-                    norm_url, wait_until="networkidle", timeout=timeout_ms
-                )
-                # Allow late hydration (deferred islands, useEffect chains).
-                page.wait_for_timeout(500)
+                # Use 'domcontentloaded' rather than 'networkidle': sites with
+                # a persistent connection (Wix live-state websocket, chat
+                # widgets, analytics long-polling) NEVER reach network idle, so
+                # 'networkidle' always times out and rendered mode silently
+                # fails. A domcontentloaded wait + a fixed settle captures the
+                # hydrated DOM reliably. If even that times out, keep going and
+                # grab whatever rendered instead of aborting the whole audit.
+                try:
+                    response = page.goto(
+                        norm_url, wait_until="domcontentloaded", timeout=timeout_ms
+                    )
+                except PlaywrightTimeout:
+                    response = None
+                # Allow late hydration (deferred islands, useEffect chains,
+                # Wix Thunderbolt component mount).
+                page.wait_for_timeout(1500)
 
                 result["url"] = page.url
                 result["content"] = page.content()
